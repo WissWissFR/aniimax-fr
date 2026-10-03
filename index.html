@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aniimax - Optimiseur de production Aniimo</title>
+    <link rel="stylesheet" href="style.css">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+    <header>
+        <h1>aniimax</h1>
+        <div class="header-buttons">
+            <button class="toggle-button" onclick="showFacilities()" id="facilitiesToggle">bâtiments</button>
+            <button class="toggle-button" onclick="showMath()" id="mathToggle">maths</button>
+            <button class="toggle-button" onclick="showHelp()" id="helpToggle">aide</button>
+            <button class="toggle-button" onclick="toggleTheme()" id="themeToggle">clair</button>
+        </div>
+    </header>
+    <p class="subtitle">optimiseur de production du homeland d'aniimo</p>
+    <p class="disclaimer"><span class="disclaimer-icon" aria-hidden="true">⚠</span>Quelques recettes, niveaux de bâtiments et quantités n'ont pas encore été confirmés en jeu ; ils sont signalés là où ils sont utilisés.</p>
+
+    <div class="container">
+
+        <main>
+            <section class="card config-section">
+                <div class="card-head">
+                    <h2>Votre Homeland</h2>
+                    <button type="button" id="clear-saved-btn" class="toggle-button small" title="Vos saisies sont enregistrées automatiquement dans ce navigateur.">Effacer les valeurs enregistrées</button>
+                </div>
+
+                <div class="tabs" role="radiogroup" aria-label="Mode de saisie">
+                    <label><input type="radio" name="config-mode" id="mode-simple" value="simple" checked> Simple</label>
+                    <label><input type="radio" name="config-mode" id="mode-advanced" value="advanced"> Avancé</label>
+                </div>
+
+                <div id="simple-config">
+                    <div class="input-row">
+                        <div class="input-field">
+                            <label for="home-level">Niveau de RV</label>
+                            <select id="home-level"></select>
+                        </div>
+                    </div>
+                    <p class="hint">Suppose que vous avez construit et amélioré tout ce que permet votre niveau de RV.</p>
+                    <details class="explain simple-details">
+                        <summary id="simple-summary-title">Bâtiments et modules</summary>
+                        <div id="simple-summary"></div>
+                    </details>
+                </div>
+
+                <div id="advanced-config">
+                    <h3>Bâtiments</h3>
+                    <p class="hint">Indiquez le nombre et le niveau de chaque bâtiment que vous possédez.</p>
+                    <div class="fill-row">
+                        <label for="fill-level">Remplir depuis le niveau de RV</label>
+                        <select id="fill-level"></select>
+                        <button type="button" id="fill-btn" class="skip-add-btn">Remplir</button>
+                        <span class="hint small">Remplace tous les nombres et niveaux ci-dessous par ce que permet ce niveau de RV.</span>
+                    </div>
+
+                    <!-- Facility cards are generated dynamically by app.js from the FACILITIES config,
+                         grouped into category sections (Materials / Environment / Materials
+                         Processing), so new facilities can be added without editing this file. -->
+                    <div class="facilities-container" id="facilities-grid"></div>
+
+                    <h3>Modules d'amélioration d'objets</h3>
+                    <p class="hint">Indiquez le niveau de chaque module d'amélioration que vous avez débloqué (0 = non débloqué).</p>
+
+                    <div class="modules-grid">
+                        <div class="module-card">
+                            <h4>Module écologique <span class="info-icon" data-tooltip="Niv. 1 : Blé rapide&#10;Niv. 2 : Bambou rapide&#10;Niv. 3 : Pomme de terre rapide&#10;Niv. 4 : Citron rapide&#10;Niv. 5 : Riz rapide&#10;Niv. 6 : Sirop d'érable rapide&#10;Niv. 7 : Fraise rapide&#10;Niv. 8 : Noix de coco rapide">?</span></h4>
+                            <div class="input-field">
+                                <label for="ecological-module-level">Niveau</label>
+                                <input type="number" id="ecological-module-level" value="0" min="0" max="10">
+                            </div>
+                        </div>
+
+                        <div class="module-card">
+                            <h4>Module cuisine <span class="info-icon" data-tooltip="Niv. 2 : Pain premium&#10;Niv. 3 : Soupe de pommes de terre premium&#10;Niv. 4 : Vin de riz sucré premium&#10;Niv. 5 : Citron salé premium&#10;Niv. 6 : Gelée premium&#10;Niv. 7 : Pudding chococo à la fraise premium">?</span></h4>
+                            <div class="input-field">
+                                <label for="kitchen-module-level">Niveau</label>
+                                <input type="number" id="kitchen-module-level" value="0" min="0" max="10">
+                            </div>
+                        </div>
+
+                        <div class="module-card">
+                            <h4>Détecteur de ressources <span class="info-icon" data-tooltip="Niv. 1 : Eau de puits rapide&#10;Niv. 2 : Sel de mer rapide&#10;Niv. 3 : Aromathyste rapide&#10;Niv. 4 : Eau fraîche rapide&#10;Niv. 5 : Laine rapide&#10;Niv. 6 : Eau de source des roches profondes rapide&#10;Niv. 7 : Eau de source minérale naturelle rapide&#10;Niv. 8 : Écailles rapides">?</span></h4>
+                            <div class="input-field">
+                                <label for="resource-detector-level">Niveau</label>
+                                <input type="number" id="resource-detector-level" value="0" min="0" max="10">
+                            </div>
+                        </div>
+
+                        <div class="module-card">
+                            <h4>Module artisanat <span class="info-icon" data-tooltip="Niv. 1 : Pierres polies de rivière premium&#10;Niv. 2 : Désodorisant à la rose premium&#10;Niv. 3 : Encens au citron avancé&#10;Niv. 4 : Carillon à vent avancé&#10;Niv. 5 : Savon premium&#10;Niv. 6 : Poussière de gemme avancée&#10;Niv. 7 : Parfum composite premium">?</span></h4>
+                            <div class="input-field">
+                                <label for="crafting-module-level">Niveau</label>
+                                <input type="number" id="crafting-module-level" value="0" min="0" max="10">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="strategy">
+                    <h3>Stratégie</h3>
+                    <div class="tabs" role="radiogroup" aria-label="Stratégie">
+                        <label><input type="radio" name="strategy" id="strategy-level-up" value="level-up" checked> Montée de niveau</label>
+                        <label><input type="radio" name="strategy" id="strategy-priorities" value="priorities"> Priorités</label>
+                    </div>
+
+                    <div id="priorities-config" style="display: none;">
+                        <p class="hint">Activez ce que vous voulez et faites glisser pour le classer. Le plan produit le plus possible du premier, puis le plus possible du suivant selon ce que cela permet, et ainsi de suite. Ce qui reste va toujours aux Pièces de Foyer.</p>
+                        <ol class="priority-list" id="priority-list"></ol>
+                    </div>
+
+                    <div id="level-up-config">
+                        <p class="hint">Réunit au plus vite tout ce que coûte votre prochain niveau de RV, puis gagne autant de Pièces de Foyer que cela le permet.</p>
+                        <div class="input-row" id="level-up-target-row">
+                            <div class="input-field">
+                                <label for="level-up-target">Monter jusqu'au RV</label>
+                                <select id="level-up-target"></select>
+                            </div>
+                        </div>
+                        <div id="level-up-cost"></div>
+                        <details class="explain" id="level-up-stock">
+                            <summary>Ce que vous avez déjà</summary>
+                            <p class="hint small">Compte pour la montée de niveau. Les Blocs de bois, le Sable minéral et les paliers inférieurs sont transformés vers les paliers supérieurs.</p>
+                            <div class="stock-grid" id="level-up-stock-grid"></div>
+                        </details>
+                    </div>
+                </div>
+
+                <div class="season" id="season-section" hidden>
+                    <label class="priority-switch season-switch">
+                        <input type="checkbox" role="switch" id="season-on">
+                        <span class="switch-track" aria-hidden="true"></span>
+                        <span class="season-title">Festival de la Lune des moissons</span>
+                    </label>
+                    <div id="season-config" hidden>
+                        <p class="hint">Un événement saisonnier avec sa propre monnaie, le Blé Rayon de lune, qui permet d'acheter les graines de la saison. À vous de garder assez de blé en réserve ; les plans indiquent combien leurs graines en consomment. Les objets de saison rapportent aussi des Points de la Lune des moissons, que vous pouvez classer dans Priorités.</p>
+                        <p class="assume-title">Notes de recette</p>
+                        <div class="special-grid" id="season-notes"></div>
+                    </div>
+                </div>
+
+                <details class="explain recipes-section" id="recipes-section">
+                    <summary>Recettes<span class="skip-count" id="recipe-count"></span></summary>
+                    <p class="assume-title">Recettes spéciales</p>
+                    <p class="hint small">Elles demandent une monnaie rare pour être débloquées. Les plans n'utilisent que celles que vous cochez.</p>
+                    <div class="special-grid" id="special-grid"></div>
+                    <p class="assume-title">Recettes à ignorer</p>
+                    <p class="hint small">Les plans ne les utiliseront pas, p. ex. les recettes qui dépendent de déblocages que vous n'avez pas encore. Vous pouvez aussi en ignorer une directement depuis un plan avec son ✕.</p>
+                    <div class="skip-add">
+                        <input type="text" id="skip-input" list="skip-options" placeholder="Rechercher des recettes" autocomplete="off" aria-label="Recette à ignorer">
+                        <button type="button" id="skip-add-btn" class="skip-add-btn">Ignorer</button>
+                    </div>
+                    <datalist id="skip-options"></datalist>
+                    <div class="skip-chips" id="skip-chips"></div>
+                </details>
+                <button id="optimize-btn" class="optimize-btn">
+                    <span class="btn-text">Trouver le meilleur plan</span>
+                    <span class="btn-loading" style="display: none;">Calcul en cours…</span>
+                </button>
+                <div id="progress-bar-container" class="progress-bar-container" style="display: none;">
+                    <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                </div>
+                <p id="progress-bar-caption" class="hint small" style="display: none;"></p>
+                <div class="card solve-progress" id="solve-progress" style="display: none;" aria-live="polite"></div>
+            </section>
+
+            <section class="results-section" id="results-section" style="display: none;">
+                <div id="error-message" class="card error-message" style="display: none;"></div>
+
+                <div id="results-content">
+                    <div class="card aniimo-card" id="aniimo-card">
+                        <div class="card-head">
+                            <button type="button" class="collapse-toggle" id="aniimo-toggle" aria-expanded="false" aria-controls="aniimo-body">
+                                <span class="chevron" aria-hidden="true"></span>
+                                <h2>Équipe d'Aniimo</h2>
+                            </button>
+                            <div class="tabs compact" role="radiogroup" aria-label="Configuration des Aniimo">
+                                <label title="Vos meilleurs Aniimo, avec la personnalité de chaque bâtiment"><input type="radio" name="aniimo-setup" id="aniimo-best" value="best" checked> Optimal</label>
+                                <label title="Le niveau de métier le plus bas que chaque recette accepte : le strict minimum pour s'en sortir"><input type="radio" name="aniimo-setup" id="aniimo-minimum" value="minimum"> Minimum</label>
+                                <label title="Planifier avec les Aniimo que vous possédez réellement"><input type="radio" name="aniimo-setup" id="aniimo-custom" value="custom"> Mes Aniimo</label>
+                            </div>
+                        </div>
+                        <div class="aniimo-setup-panel" id="aniimo-setup-panel">
+                            <p class="hint small" id="aniimo-setup-hint"></p>
+                            <div class="ability-levels" id="ability-levels"></div>
+                            <div class="roster-editor" id="roster-editor" hidden></div>
+                        </div>
+                        <p class="aniimo-count" id="aniimo-count" hidden><span id="aniimo-count-have">0</span><span class="aniimo-count-of" id="aniimo-count-of"></span></p>
+                        <p class="collapsed-summary" id="aniimo-collapsed-summary"></p>
+                        <div class="ability-strip" id="aniimo-abilities" aria-label="Aniimo nécessaires par métier"></div>
+                        <p class="hint small" id="aniimo-pending" style="display: none;">Cette configuration est encore en cours de calcul…</p>
+                        <div id="aniimo-body" hidden>
+                            <details class="explain">
+                                <summary>Comment l'équipe est déterminée</summary>
+                                <p><strong>Optimal</strong> : les meilleurs Aniimo que vous avez pour chaque métier (choisissez son niveau ci-dessus), avec la personnalité de chaque bâtiment. <strong>Mes Aniimo</strong> : les Aniimo que vous listez ; chacun travaille ce que ses métiers permettent, pendant les heures dont il dispose. <strong>Minimum</strong> : le niveau de métier le plus bas que chaque recette accepte, sans bonus de personnalité. Le plan ci-dessous suit l'option choisie.</p>
+                                <p>Un Aniimo peut prendre n'importe quelle tâche exigeant son métier à son niveau ou en dessous tant qu'il lui reste des heures, pourvu que deux de ses bâtiments ne demandent pas des personnalités opposées. Il a quatre personnalités, une de chaque paire, affichées sous forme de lettres au-dessus de son portrait : Instinctif ou Énergique (I/E), Agile ou Pragmatique (N/S), Fidèle ou Tenace (F/T), Joueur ou Judicieux (P/J). Les bâtiments avec un Aniimo résident (Sandcastle, Dewy House et similaires) en demandent un chacun, tout comme chaque Heat Furnace (Feu), Cooling Unit (Glace) et Sunlamp (Lumière) utilisée. Avec Mes Aniimo, les tâches de Farmland et de Woodland demandent seulement quelqu'un capable de chacune ; elles sont rapides, donc elles ne sont pas décomptées des heures de quiconque. Pas encore vérifié en jeu : le niveau de métier minimum de chaque recette, les tâches de Farmland et de Woodland, et si le niveau ou la personnalité de l'Aniimo d'un bâtiment d'environnement compte.</p>
+                            </details>
+                            <div id="aniimo-summary"></div>
+                        </div>
+                    </div>
+
+                    <div class="card rate-card">
+                        <!-- A level-up plan leads with the level-up, and its table's rate column
+                             takes over the unit select and the coin rate below. -->
+                        <div class="level-up-card" id="level-up-card" style="display: none;">
+                            <span class="summary-label" id="level-up-label">Montée de niveau</span>
+                            <div class="summary-value" id="level-up-time">-</div>
+                            <div id="level-up-lines"></div>
+                        </div>
+                        <div id="rate-block">
+                        <span class="summary-label" id="rate-label">Votre cadence</span>
+                        <div class="rate-line" id="rate-line">
+                            <span class="summary-value" id="plan-rate">-</span>
+                            <select id="rate-unit" class="rate-unit-select" aria-label="Unité de cadence">
+                                <option value="second">par seconde</option>
+                                <option value="minute">par minute</option>
+                                <option value="hour">par heure</option>
+                                <option value="day">par jour</option>
+                            </select>
+                        </div>
+                        <div id="priority-rates"></div>
+                        </div>
+                        <p class="plan-proof" id="plan-explored-hint"></p>
+                        <p class="plan-unverified" id="plan-unverified" style="display: none;"></p>
+                        <p class="plan-skipped" id="plan-skipped" style="display: none;"></p>
+                    </div>
+
+                    <div class="card production-steps" id="improve-card" style="display: none;">
+                        <h2>Opportunités</h2>
+                        <div id="improve-list"></div>
+                    </div>
+
+                    <div class="card production-steps" id="seed-card" style="display: none;">
+                        <h2>Graines à planter</h2>
+                        <p class="hint" id="seed-card-unit"></p>
+                        <div class="seed-table" id="seed-table"></div>
+                    </div>
+
+                    <div class="card production-steps" id="profit-card" style="display: none;">
+                        <h2>Profit par produit</h2>
+                        <p class="hint">Net des coûts de graines.</p>
+                        <div id="profit-breakdown"></div>
+                    </div>
+
+                    <div class="card production-steps">
+                        <h2>Que doit faire chaque bâtiment</h2>
+                        <details class="explain">
+                            <summary>Comment lire ceci</summary>
+                            <p>Chaque ligne est un produit ; un bâtiment réparti entre plusieurs produits a une ligne pour chacun. Les cultures qui exigent un environnement de culture sont regroupées par réglage de Heat Furnace, de Cooling Unit ou de Sunlamp qui les couvre, avec son agencement. Tout le reste est regroupé comme la liste des bâtiments.</p>
+                            <p>Dans la colonne Aniimo, chaque cercle est un métier dans sa couleur du jeu avec le niveau de l'Aniimo à l'intérieur ; un anneau signifie que le plan compte sur le bonus de personnalité du bâtiment. Survolez un cercle pour plus de détails.</p>
+                        </details>
+                        <!-- Populated by app.js's renderFacilityPlan(): one section per
+                             environment mode in use (Cool/Warm/Freeze/Scorching/Adequate) first,
+                             then one table per facility category (Materials / Environment /
+                             Materials Processing) for everything else. -->
+                        <div id="facility-plan-container" class="facilities-container"></div>
+                    </div>
+
+                    <div class="card production-steps" id="layout-card" style="display: none;">
+                        <h2>Agencement du Homeland</h2>
+                        <p class="hint" id="layout-summary"></p>
+                        <details class="explain">
+                            <summary>Comment il est agencé</summary>
+                            <p>Chaque lot terminé est porté à la Storage Unit (SU), donc chaque bâtiment est placé selon son nombre de trajets par heure multiplié par sa distance en ligne droite jusqu'à elle : les plus sollicités sont les plus proches, les inactifs vont en périphérie. Les parcelles de chaque bâtiment d'environnement peuvent se trouver partout où sa couverture les atteint encore, donc elles se placent du côté de la Storage Unit. Aucune parcelle couverte n'atteint la couverture d'un autre bâtiment, et une culture qui exige un environnement mais est cultivée sans en rester en dehors de toute couverture, de sorte que chaque culture garde la température donnée par le plan. Les cultures qui n'exigent aucun environnement peuvent aller n'importe où. Tout reste dans les parcelles que votre niveau de RV a ouvertes (chacune de 20 par 15 cases ; en mode Avancé, le plus bas niveau de RV qui permet ce que vous avez saisi), et la Storage Unit se place là où la marche est la plus courte. Survolez ou touchez un bâtiment pour voir ses trajets et sa distance. Le schéma déroule le homeland en temps de jeu accéléré à partir du moment où tout est en place : chaque lot terminé va à la Storage Unit (le transport ne prend pas de temps ici), et une recette ne démarre qu'une fois ce qu'il lui faut sur place. Un anneau sur chaque bâtiment montre son lot, ambre pendant qu'il attend des matériaux. C'est un agencement compact établi pas à pas, pas le plus court prouvé.</p>
+                        </details>
+                        <div class="layout-controls">
+                            <span class="layout-toggles">
+                                <label class="layout-whole"><input type="checkbox" id="layout-whole"> Afficher tout le homeland</label>
+                                <label class="layout-whole"><input type="checkbox" id="layout-sim-on" checked> Simuler</label>
+                            </span>
+                            <span class="layout-sim" id="layout-sim" hidden><span id="layout-clock">0h 00min</span><button type="button" class="toggle-button small" id="layout-replay">Rejouer</button></span>
+                        </div>
+                        <div class="layout-diagram" id="layout-diagram"></div>
+                    </div>
+
+                    <div class="card production-steps" id="goal-section">
+                        <h2>Fixer un objectif</h2>
+                        <p class="hint">Se met à jour instantanément à partir du plan ci-dessus.</p>
+                        <div class="config-group">
+                            <div class="input-row">
+                                <div class="input-field">
+                                    <label for="goal-target">Objectif</label>
+                                    <select id="goal-target"></select>
+                                </div>
+                                <div class="input-field">
+                                    <label for="target-amount" id="target-amount-label">Pièces de Foyer visées</label>
+                                    <input type="number" id="target-amount" value="1000" min="0">
+                                </div>
+                                <div class="input-field">
+                                    <label for="current-amount" id="current-amount-label">Pièces de Foyer actuelles</label>
+                                    <input type="number" id="current-amount" value="0" min="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="result-summary">
+                            <div class="summary-grid">
+                                <div class="summary-item">
+                                    <span class="summary-label">Temps total</span>
+                                    <span class="summary-value" id="total-time">-</span>
+                                </div>
+                                <div class="summary-item">
+                                    <span class="summary-label" id="amount-produced-label">Pièces de Foyer produites</span>
+                                    <span class="summary-value" id="amount-produced">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="level-up-coins" id="goal-also" style="display: none;"></p>
+
+                        <div class="production-steps" id="product-breakdown-section" style="display: none;">
+                            <h3>Détail par produit</h3>
+                            <div class="table-wrapper">
+                                <table id="product-breakdown-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Objet</th>
+                                            <th>Bâtiment</th>
+                                            <th>Quantité</th>
+                                            <th id="product-breakdown-rate-header">Profit</th>
+                                            <th>Valeur <span class="th-unit">Pièces de Foyer</span></th>
+                                            <th id="product-breakdown-points-header" hidden>Points de la Lune des moissons</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="product-breakdown-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="production-steps" id="seeds-needed-section" style="display: none;">
+                            <h3>Graines nécessaires</h3>
+                            <div class="table-wrapper">
+                                <table id="seeds-needed-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Culture</th>
+                                            <th>Bâtiment</th>
+                                            <th>Parcelles</th>
+                                            <th>Plantations/parcelle</th>
+                                            <th>Total de graines</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="seeds-needed-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>aniimax v<span id="version">-</span> | <a href="https://github.com/ae-bii/aniimax" target="_blank">github</a></p>
+            <p class="footer-note">Traduction française non officielle de <a href="https://github.com/ae-bii/aniimax" target="_blank" rel="noopener">aniimax</a> (licence MIT, © aebii).</p>
+            <p class="footer-note">Outil non officiel réalisé par des fans. Sans affiliation avec les créateurs d'Aniimo ni approbation de leur part.</p>
+            <p class="footer-note">Vos saisies sont enregistrées dans votre navigateur et ne sont jamais envoyées ailleurs.</p>
+        </footer>
+    </div>
+
+    <!-- Facilities Modal -->
+    <div id="facilitiesModal" class="modal" onclick="closeFacilitiesOnBackdrop(event)">
+        <div class="modal-content wide">
+            <div class="modal-header">
+                <h2>Recettes des bâtiments</h2>
+                <button class="close-button" onclick="closeFacilities()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="hint">Toutes les recettes des données du jeu, regroupées par bâtiment. C'est un tableau de référence, sans lien avec le nombre ni le niveau de vos bâtiments.</p>
+                <p class="hint small" id="facilities-loading-hint">Chargement des données de recettes…</p>
+                <div id="facilities-modal-container" class="facilities-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Math Modal -->
+    <div id="mathModal" class="modal" onclick="closeMathOnBackdrop(event)">
+        <div class="modal-content modal-wide">
+            <div class="modal-header">
+                <h2>Comment ça marche</h2>
+                <button class="close-button" onclick="closeMath()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h3>Le modèle</h3>
+                <p>Chaque plan est un programme linéaire en nombres entiers mixtes qui couvre d'un coup toutes les recettes et tous les bâtiments, résolu avec <a href="https://highs.dev" target="_blank" rel="noopener">HiGHS</a>. Chaque recette que débloquent les niveaux de vos bâtiments et vos modules, \(r\), reçoit une cadence \(b_r\) (lots par seconde) et un nombre entier d'unités \(u_r\) qui lui sont affectées : des parcelles pour une culture, des machines pour un objet transformé.</p>
+                <div class="math-block">\[ \max \ \sum_i p_i \, s_i \;-\; \sum_r c_r \, b_r \]</div>
+                <p>où \(s_i\) est la quantité de l'objet \(i\) vendue par seconde au prix \(p_i\), et \(c_r\) le coût en graines d'une culture. Pendant le Festival de la Lune des moissons, les graines des cultures de saison coûtent du Blé Rayon de lune à la place, que les plans considèrent comme illimité. Sous les contraintes :</p>
+                <ul>
+                    <li><strong>Unités entières.</strong> \(b_r \, t_r \le u_r\), avec \(u_r\) un nombre entier et \(t_r\) le temps par lot. Une unité exécute une recette et reste en marche.</li>
+                    <li><strong>Équilibre des objets.</strong> Tout ce qui est produit couvre ce qu'utilisent les autres recettes plus ce qui est vendu. Une variante rapide produit le même objet que la variante normale.</li>
+                    <li><strong>Ce que vous possédez.</strong> Pour chaque bâtiment et chaque niveau \(L\), les unités affectées aux recettes exigeant le niveau \(L\) ou plus totalisent au plus ce que vous possédez à ce niveau. Une parcelle de niveau supérieur peut exécuter une recette de niveau inférieur.</li>
+                    <li><strong>Environnements de culture.</strong> Une culture qui demande Frais, Chaud, Glacial ou Brûlant pousse à pleine vitesse sur une parcelle couverte par une Heat Furnace ou une Cooling Unit réglée sur ce mode, et plus lentement sur une parcelle non couverte (voir plus bas). Une culture Adéquat exige une Sunlamp et ne pousse nulle part ailleurs.</li>
+                </ul>
+                <p>HiGHS prouve que le plan est le meilleur possible. Dans le cas rare où cela prend plus de 30 secondes, il s'arrête avec le meilleur plan trouvé jusque-là et les résultats indiquent à quelle distance de l'optimum il pourrait se situer. Chaque plan est ensuite revérifié indépendamment avant d'être affiché.</p>
+
+                <h3>Temps par lot</h3>
+                <p>Les cultures et les arbres prennent leur temps de pousse, moins l'arrosage des Aniimo : une parcelle demande de l'eau deux fois pendant sa pousse, aux deux tiers puis au tiers du temps restant, et chaque arrosage retire un huitième du temps propre de la culture. Une culture de 40 minutes revient à 30 et une de 4 minutes à 3. Une culture privée de son environnement pousse plus lentement mais perd quand même les mêmes minutes : une culture de mode Chaud sans bâtiment prend 50 minutes et tombe à 40 avec l'arrosage ; ce point n'est pas encore vérifié en jeu.</p>
+                <p>Tout le reste a une charge de travail, et sa durée dépend de l'Efficacité \(e\) de l'Aniimo, qu'affiche l'écran du bâtiment, et d'une cadence de base \(r\) :</p>
+                <div class="math-block">\[ t = \frac{\text{charge}}{r \times e \times 1.2^{\,\text{personnalité}}} \]</div>
+                <p>Dans un bâtiment de transformation, \(r\) vaut une charge de travail par seconde. Dans un bâtiment de collecte (Well, Mine, Sandcastle, Dewy House et similaires) ainsi qu'au Dance Pad Polisher et à l'Aniipod Maker, elle est plus élevée sur les recettes exigeant un niveau de métier plus haut : 1 par seconde au niveau 1, 1,25 au niveau 2 et 1,5 au niveau 3. Un Fruit de croissance, de 5 400 de charge de travail, prend une heure à 100 %.</p>
+                <p>L'Efficacité \(e\) dépend du niveau de métier de l'Aniimo par rapport au niveau qu'exige la recette. Au niveau exact requis, elle vaut 100 %. Dans un bâtiment de transformation, un niveau au-dessus du besoin de la recette donne 300 %, et chaque niveau suivant ajoute 100 % (400 %, 500 %). Dans un bâtiment de collecte, chaque niveau au-dessus ajoute une demi-charge de travail par seconde, quelle que soit la recette, ce qui, rapporté à la cadence de base de la recette, donne +50 % par niveau sur une recette de niveau 1, +40 % sur une de niveau 2 et +33 % sur une de niveau 3. Le Dance Pad Polisher et l'Aniipod Maker ajoutent 40 % par niveau. Le terme de personnalité ne compte que si l'Aniimo a la personnalité du bâtiment (+20 %) ; le Polisher et l'Aniipod Maker n'en ont pas. Les niveaux de métier s'arrêtent à 4.</p>
+
+                <h3>Couverture des environnements</h3>
+                <p>Les environnements sont des paliers de température : Glacial -2, Frais -1, aucun bâtiment 0, Chaud +1, Brûlant +2. Une culture pousse à 100 % dans son propre environnement, 80 % à un palier d'écart, 50 % à deux paliers et 20 % au-delà. Une parcelle non couverte est neutre : une culture Frais ou Chaud atteint quand même 80 % et une culture Glacial ou Brûlant 50 %, ce qui explique que les plans les fassent parfois pousser sans aucun bâtiment. Adéquat est à part : ces cultures exigent une Sunlamp. L'Efficacité allonge le temps de pousse : une Rose à 80 % prend 50 min au lieu de 40 min pour les mêmes 8 roses, avant arrosage.</p>
+                <p>Les températures s'additionnent là où deux bâtiments atteignent une même parcelle, plafonnées à -2 et +2, et le jeu affiche le résultat sur la parcelle elle-même : Brûlant et Frais ensemble donnent Chaud, Chaud et Frais donnent Tempéré. Les plans en tirent parti : une Heat Furnace sur Brûlant à quatre cases d'écart d'une Cooling Unit sur Frais couvre trois zones à la fois, Brûlant, Chaud entre les deux, et Frais. L'emplacement du second bâtiment détermine la répartition : tous les placements dont la couverture chevauche encore celle du premier sont calculés, en ligne ou en diagonale, depuis le contact (6 parcelles, 24 au milieu et 6, pour Farmland) jusqu'à un chevauchement d'un coin (22, 10 et 22). Deux bâtiments aussi proches couvrent moins de parcelles au total que deux bâtiments éloignés, donc un plan ne le fait que si la troisième zone vaut davantage. Placez la paire exactement comme l'indique le schéma du plan, et gardez la zone de tout autre bâtiment à l'écart.</p>
+                <p>Une Cooling Unit fait 2×2 cases, et une Heat Furnace et une Sunlamp une case chacune ; chacune couvre une zone de 9×9 centrée sur elle. Une parcelle compte comme couverte si une partie d'elle s'y trouve, et tout s'aligne sur des quarts de case. Chaque façon utile qu'un bâtiment peut couvrir un mélange de Farmland, de Woodland et du reste est calculée une fois par un empaquetage exact ; le plan choisit ensuite un mode et l'un de ces mélanges pour chaque bâtiment.</p>
+
+                <h3>Montée de niveau</h3>
+                <p>Une montée de niveau coûte des Pièces de Foyer \(C_0\) plus les matériaux qu'elle demande, \(C_1\) et \(C_2\) (Blocs de bois et Sable minéral bruts jusqu'au RV 6, un objet du Woodworking Bench et un objet du Chimney Kiln à partir du RV 7), et vous pouvez déjà en avoir une partie de chacun, \(S_j\). Le plan trouve le plus grand nombre de montées de niveau par jour, \(\lambda\), qu'il peut tenir, avec, pour les Pièces de Foyer et chaque objet :</p>
+                <div class="math-block">\[ \text{produit}_j \ \ge\ \frac{\lambda \, (C_j - S_j)}{86400} \]</div>
+                <p>(\(\text{produit}_j\) par seconde), donc la montée de niveau prend \(1/\lambda\) jours. Le stock de tout ce qui est plus bas dans une chaîne (Blocs de bois, Sable minéral, un palier inférieur) compte dans ce qui est produit, puisque le Bench et le Kiln le transforment vers le haut. Deux résolutions supplémentaires suivent, chacune conservant ce que la précédente a trouvé : le maximum de Pièces de Foyer à ce rythme, puis le plus possible d'objets de montée de niveau en plus, selon le temps libre du Bench et du Kiln. C'est pourquoi le minerai finit souvent avant le bois et apparaît en surplus.</p>
+                <p>Chaque palier consomme 8 du palier inférieur (4 pour le dernier), donc le Bench et le Kiln alternent entre les paliers au lieu d'exécuter une seule recette comme les autres bâtiments de transformation.</p>
+
+                <h3>Priorités</h3>
+                <p>Le plan est résolu une fois par priorité cochée, dans votre ordre. Chaque résolution produit le plus possible de sa priorité en conservant au moins ce qu'ont atteint les précédentes ; une dernière résolution gagne ensuite autant de Pièces de Foyer que tout cela le permet. L'EXP d'Aniimo, les Aniipods et, pendant le Festival de la Lune des moissons, les Points de la Lune des moissons comptent comme des monnaies à part, donc le même modèle les traite comme les Pièces de Foyer.</p>
+
+                <h3>Temps pour atteindre un objectif</h3>
+                <p>Chaque produit commence à s'accumuler une fois que son premier lot a traversé sa chaîne d'ingrédients (son délai), puis garde sa cadence stable :</p>
+                <div class="math-block">\[ \text{quantité}(t) = \sum_i \text{cadence}_i \cdot \max(0,\ t - \text{délai}_i) \]</div>
+                <p>Cette quantité ne fait que croître avec \(t\), donc le temps pour atteindre une cible se trouve par recherche dichotomique.</p>
+
+                <h3>Le planificateur de secours</h3>
+                <p>Si le planificateur exact ne peut pas s'exécuter (rare ; recharger la page règle généralement le problème), un ancien planificateur prend le relais. Il résout le même problème sous forme de programme linéaire continu, arrondit à des parcelles entières et à une recette par machine, puis résout à nouveau. Ses plans sont généralement proches de l'optimal sans garantie, et les résultats indiquent quand il a été utilisé.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal" onclick="closeHelpOnBackdrop(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Mode d'emploi</h2>
+                <button class="close-button" onclick="closeHelp()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h3>1. Indiquez ce que vous avez construit</h3>
+                <p><strong>Simple</strong> : choisissez votre niveau de RV, et le calculateur suppose que vous avez construit et amélioré tout ce que ce niveau permet. <strong>Avancé</strong> : réglez vous-même le nombre et le niveau de chaque bâtiment et module d'amélioration. En mode Avancé, « Remplir depuis le niveau de RV » règle tout sur ce que permet un niveau de RV, comme point de départ.</p>
+                <p>Sous <strong>Recettes</strong>, les recettes spéciales (Sablé à la rose, Kvas de pomme de terre et quelques autres) demandent une monnaie rare pour être débloquées ; les plans les écartent donc tant que vous ne cochez pas celles que vous possédez.</p>
+                <p>Toujours sous <strong>Recettes</strong>, ajoutez tout ce que vous ne pouvez pas encore fabriquer, comme les recettes qui dépendent de déblocages que vous n'avez pas. Les plans ne les utiliseront pas. Le ✕ à côté d'un produit dans un plan l'ignore et relance le calcul.</p>
+
+                <h3>2. Choisissez une stratégie</h3>
+                <p><strong>Montée de niveau</strong> réunit au plus vite tout ce que coûte votre prochain niveau de RV : ses Pièces de Foyer plus des Blocs de bois et du Sable minéral, ou, à partir du RV 7, un objet du Woodworking Bench et un objet du Chimney Kiln. Sous « Ce que vous avez déjà », indiquez ce que vous possédez ; les Blocs de bois, le Sable minéral et les paliers inférieurs comptent aussi, puisque le Bench et le Kiln les transforment vers le haut. Le plan gagne quand même autant de Pièces de Foyer que possible en chemin. En mode Avancé, vous pouvez choisir le niveau de RV visé.</p>
+                <p><strong>Priorités</strong> classe ce que vous voulez : Pièces de Foyer, EXP d'Aniimo (objets de croissance du Dance Pad Polisher), Aniipods (le meilleur palier que votre Aniipod Maker peut atteindre, car un meilleur Aniipod attrape mieux), Blocs de bois et Sable minéral. Activez ceux que vous voulez et faites-les glisser dans l'ordre ; le plan produit le plus possible du premier, puis le plus possible du suivant selon ce que cela permet, et ce qui reste va aux Pièces de Foyer. La carte de cadence montre chacun d'eux.</p>
+
+                <h3>3. Trouvez le meilleur plan</h3>
+                <p>Cliquez sur « Trouver le meilleur plan » pour voir combien de temps prend la montée de niveau (ou votre meilleure cadence) et ce que chaque bâtiment doit produire. Configurez-le une fois et laissez-le tourner. Tout ce que vous saisissez est enregistré dans votre navigateur ; « Effacer les valeurs enregistrées » le réinitialise.</p>
+
+                <h3>4. Fixez un objectif (facultatif)</h3>
+                <p>Choisissez ce que vous visez, saisissez la quantité cible et ce que vous avez actuellement, et la carte indique combien de temps cela prend et ce que vous aurez d'autre d'ici là. Elle se met à jour instantanément pendant la saisie.</p>
+
+                <h3>Comprendre les résultats</h3>
+                <ul>
+                    <li><strong>Équipe d'Aniimo</strong> : quels Aniimo garder sur votre homeland, pour la configuration la plus rapide (Optimal) ou le strict minimum (Minimum). <strong>Mes Aniimo</strong> planifie plutôt avec les Aniimo que vous listez et montre ce que fait chacun. Ouvrez-la pour la liste complète.</li>
+                    <li><strong>Montée de niveau</strong> : dans combien de temps vous aurez tout ce que coûte la montée de niveau, et à quelle vitesse chaque coût arrive (choisissez l'unité en haut de cette colonne). Le plus lent est en gras. Le surplus est ce qui reste quand tout est prêt, comme des Pièces de Foyer ou du minerai en trop.</li>
+                    <li><strong>Vos cadences</strong> : avec Priorités, ce que le plan produit de chaque priorité dans votre ordre, puis les Pièces de Foyer avec ce qui reste, par seconde, minute, heure ou jour.</li>
+                    <li><strong>Graines à planter</strong> : les graines que consomment vos Farmland et Woodland et ce qu'elles coûtent, au total jusqu'à la montée de niveau avec Montée de niveau, ou à la cadence choisie avec Priorités.</li>
+                    <li><strong>Profit par produit</strong> : avec Montée de niveau, ce que rapporte chaque produit par heure et au total jusqu'à ce que la montée de niveau soit prête.</li>
+                    <li><strong>Que doit faire chaque bâtiment</strong> : sur quoi régler chaque bâtiment, le tout tournant en même temps. Les recettes marquées « non vérifié » n'ont pas encore été vérifiées en jeu.</li>
+                    <li><strong>Opportunités</strong> : changements à votre portée (une recette à débloquer, un niveau d'Aniimo et, en mode Avancé, un module ou un bâtiment) classés selon l'amélioration qu'ils apporteraient au plan.</li>
+                    <li><strong>Agencement du Homeland</strong> : où placer chaque bâtiment pour que les plus sollicités soient au plus près de la Storage Unit.</li>
+                    <li><strong>Fixer un objectif</strong> : avec Priorités, combien de temps il faut pour atteindre une quantité cible de Pièces de Foyer ou de toute priorité activée, et ce que vous aurez d'autre d'ici là.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.toggleTheme = function() {
+            const body = document.body;
+            const button = document.getElementById('themeToggle');
+            body.classList.toggle('light');
+            if (body.classList.contains('light')) {
+                button.textContent = 'sombre';
+            } else {
+                button.textContent = 'clair';
+            }
+        }
+
+        window.showHelp = function() {
+            document.getElementById('helpModal').classList.add('show');
+        }
+
+        window.closeHelp = function() {
+            document.getElementById('helpModal').classList.remove('show');
+        }
+
+        window.closeHelpOnBackdrop = function(event) {
+            if (event.target.id === 'helpModal') {
+                closeHelp();
+            }
+        }
+
+        window.showMath = function() {
+            document.getElementById('mathModal').classList.add('show');
+            // Trigger MathJax to render
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        }
+
+        window.closeMath = function() {
+            document.getElementById('mathModal').classList.remove('show');
+        }
+
+        window.closeMathOnBackdrop = function(event) {
+            if (event.target.id === 'mathModal') {
+                closeMath();
+            }
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeHelp();
+                closeMath();
+                closeFacilities();
+            }
+        });
+    </script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
