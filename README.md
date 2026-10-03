@@ -3,10 +3,11 @@
 Traduction française **non officielle** de [aniimax](https://github.com/ae-bii/aniimax)
 ([site d'origine](https://ae-bii.github.io/aniimax/)), l'optimiseur de production du Homeland du jeu Aniimo.
 
-Le moteur (solveur Rust/WASM + HiGHS) est celui d'origine, inchangé : seuls l'interface, les textes
-et les noms d'items sont traduits. Les noms d'items viennent du [wiki FR](https://aniimowiki.fr/)
-quand ils y figurent, sinon ce sont des traductions à vérifier en jeu. Les noms de bâtiments restent en
-anglais par défaut (comme sur le wiki FR) ; `TRANSLATE_FACILITY_NAMES` dans `i18n-fr.js` les francise.
+Le moteur (solveur Rust/WASM + HiGHS) est celui d'origine, inchangé : seuls l'interface, les textes,
+les noms d'items et les noms de bâtiments sont traduits. Les noms d'items viennent du
+[wiki FR](https://aniimowiki.fr/) quand ils y figurent, sinon ce sont des traductions à vérifier en jeu.
+Les noms de bâtiments sont des traductions libres (le client semble les laisser en anglais) :
+mettre `TRANSLATE_FACILITY_NAMES = false` dans `i18n-fr.js` pour retrouver les noms anglais.
 
 ## Lancer en local
 

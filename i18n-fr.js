@@ -1,24 +1,23 @@
 // Couche de traduction française. Les clés anglaises (noms de bâtiments, d'items, de métiers…)
 // restent celles que le solveur WASM attend ; seul l'AFFICHAGE passe par ces fonctions.
 
-// Mettre à true pour franciser aussi les noms de bâtiments. Le wiki FR (aniimowiki.fr) les garde en
-// anglais, comme le client : false évite de dérouter quelqu'un qui cherche le bâtiment en jeu.
-export const TRANSLATE_FACILITY_NAMES = false;
+// Noms de bâtiments en français (true) ou ceux du client anglais (false), pour retrouver un bâtiment en jeu.
+export const TRANSLATE_FACILITY_NAMES = true;
 
 const FACILITY_FR = {
-    'Farmland': 'Terres cultivées',
-    'Woodland': 'Boisement',
+    'Farmland': 'Champ',
+    'Woodland': 'Bosquet',
     'Mine': 'Mine',
     'Well': 'Puits',
-    'Tidewhisper Sandcastle': 'Château de sable du Murmure des marées',
+    'Tidewhisper Sandcastle': 'Château de sable',
     'Dewy House': 'Maison de rosée',
     'Nimbus Bed': 'Lit de nimbus',
-    'Starfall Hammock': 'Hamac des étoiles filantes',
+    'Starfall Hammock': "Hamac d'étoile filante",
     'Floral Windmill': 'Moulin à vent fleuri',
     'Heat Furnace': 'Fournaise',
-    'Cooling Unit': 'Unité de refroidissement',
+    'Cooling Unit': 'Refroidisseur',
     'Sunlamp': 'Lampe solaire',
-    'Carousel Mill': 'Moulin-carrousel',
+    'Carousel Mill': 'Moulin carrousel',
     'Crafting Table': "Établi d'artisanat",
     'Claw Game Cooker': 'Cuiseur à pince',
     'Jukebox Dryer': 'Séchoir juke-box',
@@ -26,14 +25,31 @@ const FACILITY_FR = {
     'Phonolfactory Table': 'Table phonolfactive',
     'Bouncy Brew Keg': 'Tonneau rebondissant',
     'Blazing Stove': 'Poêle flamboyant',
-    'Pickling Jar': 'Bocal de saumure',
-    'Joy Wheel Loom': 'Métier à tisser roue de joie',
+    'Pickling Jar': 'Bocal à saumure',
+    'Joy Wheel Loom': 'Métier à roue de joie',
     'Dance Pad Polisher': 'Polisseuse à tapis de danse',
     'Aniipod Maker': "Fabrique d'Aniipods",
     'Woodworking Bench': 'Établi de menuiserie',
-    'Chimney Kiln': 'Four-cheminée',
+    'Chimney Kiln': 'Four à cheminée',
     'Storage Unit': 'Unité de stockage',
 };
+
+// Abréviations de la carte du Homeland : les initiales des noms FR se télescopent (Établi d'artisanat
+// et Établi de menuiserie donneraient toutes deux "ÉD"), donc une table explicite et sans doublon.
+const FACILITY_ABBR_FR = {
+    'Farmland': 'CH', 'Woodland': 'BO', 'Mine': 'MI', 'Well': 'PU', 'Tidewhisper Sandcastle': 'CS',
+    'Dewy House': 'MR', 'Nimbus Bed': 'LN', 'Starfall Hammock': 'HE', 'Floral Windmill': 'MF',
+    'Heat Furnace': 'FO', 'Cooling Unit': 'RE', 'Sunlamp': 'LS', 'Carousel Mill': 'MC',
+    'Crafting Table': 'EA', 'Claw Game Cooker': 'CP', 'Jukebox Dryer': 'SJ', 'Simmering Pot': 'MM',
+    'Phonolfactory Table': 'TP', 'Bouncy Brew Keg': 'TR', 'Blazing Stove': 'PF', 'Pickling Jar': 'BS',
+    'Joy Wheel Loom': 'MJ', 'Dance Pad Polisher': 'PD', 'Aniipod Maker': 'FA', 'Woodworking Bench': 'EM',
+    'Chimney Kiln': 'FC', 'Storage Unit': 'US',
+};
+
+export function facilityAbbr(name) {
+    if (TRANSLATE_FACILITY_NAMES && FACILITY_ABBR_FR[name]) return FACILITY_ABBR_FR[name];
+    return name.split(/[\s-]+/).map(w => w[0]).join('').toUpperCase();
+}
 
 export function facilityLabel(name) {
     return TRANSLATE_FACILITY_NAMES ? (FACILITY_FR[name] || name) : name;

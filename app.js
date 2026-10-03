@@ -6,7 +6,7 @@ import {
     LEVEL_UP_COSTS, LEVEL_UP_CHAINS, SPECIAL_RECIPES, SEASON, ANIIPOD_TIERS, PERSONALITY_PAIRS, personalityLetter, opposedPersonality,
 } from './facility-config.js';
 import {
-    itemLabel, facilityLabel, abilityLabel, personalityLabel, categoryLabel, envLabel, wasmText, plural,
+    itemLabel, facilityLabel, facilityAbbr, abilityLabel, personalityLabel, categoryLabel, envLabel, wasmText, plural,
 } from './i18n-fr.js';
 
 let wasmReady = false;
@@ -1231,8 +1231,8 @@ function renderHomelandLayout(plan) {
             unplaced.length ? `Non placés, taille inconnue : ${unplaced.map(f => facilityLabel(f)).join(', ')}.` : '',
         ].filter(Boolean).join(' ');
         document.getElementById('layout-summary').textContent = `${trips > 0
-            ? `${formatNumber(Math.round(trips))} trajets par heure vers le ${facilityLabel('Storage Unit')}, ${(walked / trips).toFixed(1).replace('.', ',')} cases en moyenne par trajet, dans ${cells.length} ${plural(cells.length, 'parcelle ouverte', 'parcelles ouvertes')} au RV ${homeLevel}.`
-            : `Rien dans ce plan n'est acheminé vers le ${facilityLabel('Storage Unit')}.`}${notes ? ` ${notes}` : ''}`;
+            ? `${formatNumber(Math.round(trips))} trajets par heure vers l'${facilityLabel('Storage Unit')}, ${(walked / trips).toFixed(1).replace('.', ',')} cases en moyenne par trajet, dans ${cells.length} ${plural(cells.length, 'parcelle ouverte', 'parcelles ouvertes')} au RV ${homeLevel}.`
+            : `Rien dans ce plan n'est acheminé vers l'${facilityLabel('Storage Unit')}.`}${notes ? ` ${notes}` : ''}`;
         lastLayout = { layout, homeLevel };
         drawLayout(lastLayout);
         setStep('layout', 'done');
@@ -1294,7 +1294,7 @@ function homelandSvg(layout, homeLevel) {
             stats: m.weight > 0 ? `${formatRate(m.weight)} trajets/heure · à ${away.toFixed(1).replace('.', ',')} cases du stockage` : '',
             color,
         });
-        const label = Math.min(m.w, m.h) >= 1.5 ? `<text x="${m.x + m.w / 2}" y="${m.y + m.h / 2}" font-size="${Math.min(0.8, m.w / 3)}">${initialsOf(facilityLabel(m.facility))}</text>` : '';
+        const label = Math.min(m.w, m.h) >= 1.5 ? `<text x="${m.x + m.w / 2}" y="${m.y + m.h / 2}" font-size="${Math.min(0.8, m.w / 3)}">${facilityAbbr(m.facility)}</text>` : '';
         // Busier pieces are filled more solidly; idle ones are an outline.
         const fill = m.building ? 0.9 : m.weight > 0 ? 0.35 + 0.55 * Math.sqrt(m.weight / maxTrips) : 0.08;
         if (m.building) {
@@ -1336,7 +1336,7 @@ function homelandSvg(layout, homeLevel) {
         <g class="layout-rings" pointer-events="none">${rings}</g>
         <g class="layout-flows" pointer-events="none">${flows}<g class="layout-dots"></g></g>
         <g class="layout-piece layout-storage-unit" ${tipAttrs(facilityLabel('Storage Unit'), { detail: 'Où tout est acheminé', stats: totalTrips > 0 ? `${formatRate(totalTrips)} trajets/heure` : '' })}><rect x="${s.x + 0.04}" y="${s.y + 0.04}" width="${s.w - 0.08}" height="${s.h - 0.08}" rx="0.2" class="layout-storage" />
-        <text x="${s.x + s.w / 2}" y="${s.y + s.h / 2}" font-size="0.8" class="layout-storage-text">SU</text></g>
+        <text x="${s.x + s.w / 2}" y="${s.y + s.h / 2}" font-size="0.8" class="layout-storage-text">${facilityAbbr('Storage Unit')}</text></g>
     </svg>`;
 }
 
