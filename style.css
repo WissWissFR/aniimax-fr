@@ -3117,3 +3117,20 @@ tr.row-done td[data-label="Production"] {
         border-color: var(--border);
     }
 }
+
+.aniimo-dir-fold > summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.1rem 0 0.5rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 1.17em;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.aniimo-dir-fold:not([open]) > summary {
+    margin-bottom: 0;
+}

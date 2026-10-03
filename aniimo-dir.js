@@ -13,6 +13,8 @@ let selected = 'Earth';
 let levelFilter = 'all';
 let query = '';
 let built = false;
+// Niveaux 1 et 2 repliés par défaut : en optimisation ils servent rarement.
+const openedLow = new Set();
 
 const withAbility = name => ANIIMO.filter(it => it.a[name] != null);
 const maxLevel = name => Math.max(0, ...withAbility(name).map(it => it.a[name]));
@@ -79,10 +81,14 @@ function render() {
     body.innerHTML = [4, 3, 2, 1].map(level => {
         const list = matches.filter(it => it.a[selected] === level);
         if (!list.length) return '';
-        return `<section class="aniimo-dir-level level-${level}">
-            <h3>Niveau ${level}<span class="aniimo-dir-level-count">${list.length}</span></h3>
-            <ul class="aniimo-dir-list">${list.map(cardHtml).join('')}</ul>
-        </section>`;
+        const heading = `Niveau ${level}<span class="aniimo-dir-level-count">${list.length}</span>`;
+        const cards = `<ul class="aniimo-dir-list">${list.map(cardHtml).join('')}</ul>`;
+        // Replié seulement dans la vue « Tous » sans recherche ; filtrer sur un niveau ou chercher le déplie.
+        if (level <= 2 && levelFilter === 'all' && !q) {
+            return `<details class="aniimo-dir-level aniimo-dir-fold level-${level}" data-level="${level}"${openedLow.has(level) ? ' open' : ''}>
+                <summary>${heading}</summary>${cards}</details>`;
+        }
+        return `<section class="aniimo-dir-level level-${level}"><h3>${heading}</h3>${cards}</section>`;
     }).join('');
 }
 
@@ -133,6 +139,12 @@ function build() {
         levelFilter = btn.dataset.level;
         render();
     });
+    // `toggle` ne remonte pas : écoute en capture pour retenir quels niveaux bas sont dépliés.
+    modal.addEventListener('toggle', e => {
+        const level = Number(e.target.dataset?.level);
+        if (!e.target.classList?.contains('aniimo-dir-fold') || !level) return;
+        if (e.target.open) openedLow.add(level); else openedLow.delete(level);
+    }, true);
     modal.querySelector('#aniimo-dir-search').addEventListener('input', e => { query = e.target.value; render(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') window.closeAniimo(); });
     built = true;
