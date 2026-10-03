@@ -2837,3 +2837,115 @@ tr:hover .skip-row,
         animation: none;
     }
 }
+
+/* Annuaire des Aniimo (aniimo-dir.js) */
+.aniimo-dir-abilities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0.75rem 0;
+}
+
+.aniimo-dir-chip {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.05rem;
+    padding: 0.35rem 0.7rem;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--ability);
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.aniimo-dir-chip.on {
+    background: var(--ability);
+    border-color: var(--ability);
+    color: #fff;
+}
+
+.aniimo-dir-count {
+    font-size: 0.7rem;
+    font-weight: 400;
+    opacity: 0.8;
+}
+
+.aniimo-dir-level h3,
+.aniimo-dir-level > summary {
+    margin: 1rem 0 0.4rem;
+}
+
+.aniimo-dir-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 0.4rem 1.25rem;
+}
+
+.aniimo-dir-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.5rem;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.aniimo-dir-name {
+    font-weight: 600;
+}
+
+.aniimo-dir-others {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-left: auto;
+}
+
+/* Cases « mis en place » / « acheté » (plan des bâtiments et graines) */
+.done-col,
+.done-cell {
+    width: 2.25rem;
+    text-align: center;
+}
+
+.plan-done,
+.plan-done-all {
+    width: 1.1rem;
+    height: 1.1rem;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+tr.row-done td:not(.done-cell) {
+    opacity: 0.5;
+}
+
+tr.row-done td[data-label="Production"] {
+    text-decoration: line-through;
+}
+
+.done-summary {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 0.5rem 0;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+#seed-remaining td {
+    font-weight: 600;
+}
+
+.aniimo-dir-form {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}

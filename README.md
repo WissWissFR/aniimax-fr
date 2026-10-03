@@ -9,6 +9,13 @@ les noms d'items et les noms de bâtiments sont traduits. Les noms d'items vienn
 Les noms de bâtiments sont des traductions libres (le client semble les laisser en anglais) :
 mettre `TRANSLATE_FACILITY_NAMES = false` dans `i18n-fr.js` pour retrouver les noms anglais.
 
+## Ajouts par rapport à l'original
+
+- **Cases « mis en place » / « acheté »** dans le plan des bâtiments et le tableau des graines
+  (mémorisées dans le navigateur, avec compteur et « reste à acheter »).
+- **Annuaire des Aniimo** (bouton « aniimo ») : qui a quelle capacité Homeland et à quel niveau,
+  données de [wikily.gg](https://wikily.gg/fr/aniimo/aniilog) relevées le 2026-10-03 (`aniimo-data.js`).
+
 ## Lancer en local
 
 Les workers WASM ne marchent pas en `file://` : lancer `lancer.bat` (ou `python -m http.server 8123`)

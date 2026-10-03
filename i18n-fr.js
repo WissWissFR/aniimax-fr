@@ -63,11 +63,12 @@ const CATEGORY_FR = {
 };
 export const categoryLabel = c => CATEGORY_FR[c] || c;
 
-// Métiers (wiki FR : Portage, Artisanat, Loisir, Parfumerie) et éléments.
+// Métiers et éléments, dans les mots des guides FR qui jouent en français (Transport, Plante, Ténèbres) ;
+// le wiki aniimowiki.fr dit Portage/Herbe/Ombre, wikily.gg dit Obscurité : aucune source n'est officielle.
 const ABILITY_FR = {
-    Hauling: 'Portage', Artisanship: 'Artisanat', Leisure: 'Loisir', Perfumery: 'Parfumerie',
-    Fire: 'Feu', Water: 'Eau', Grass: 'Herbe', Lightning: 'Foudre', Ice: 'Glace',
-    Earth: 'Terre', Wind: 'Vent', Dark: 'Ombre', Light: 'Lumière',
+    Hauling: 'Transport', Artisanship: 'Artisanat', Leisure: 'Loisir', Perfumery: 'Parfumerie',
+    Fire: 'Feu', Water: 'Eau', Grass: 'Plante', Lightning: 'Foudre', Ice: 'Glace',
+    Earth: 'Terre', Wind: 'Vent', Dark: 'Ténèbres', Light: 'Lumière',
 };
 export const abilityLabel = a => ABILITY_FR[a] || a;
 

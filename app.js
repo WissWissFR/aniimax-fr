@@ -8,6 +8,7 @@ import {
 import {
     itemLabel, facilityLabel, facilityAbbr, abilityLabel, personalityLabel, categoryLabel, envLabel, wasmText, plural,
 } from './i18n-fr.js';
+import { initAniimoDirectory } from './aniimo-dir.js';
 
 let wasmReady = false;
 
@@ -2471,6 +2472,73 @@ function renderLevelUp(plan) {
     rateBlock.style.display = 'none';
 }
 
+// Cases « mis en place » / « acheté » : la quantité cochée est retenue dans le navigateur et reste
+// valable tant que le plan n'en demande pas davantage (un plan à 15 bâtiments ne décoche pas un 12).
+const DONE_STORAGE_KEY = 'aniimax.done.v1';
+let doneChecks = (() => {
+    try { return JSON.parse(localStorage.getItem(DONE_STORAGE_KEY)) || {}; } catch (e) { return {}; }
+})();
+
+function saveDoneChecks() {
+    try { localStorage.setItem(DONE_STORAGE_KEY, JSON.stringify(doneChecks)); } catch (e) { /* stockage indisponible */ }
+}
+
+const isDone = (key, needed) => (doneChecks[key] ?? -1) >= needed - 1e-9;
+
+function doneCell(key, needed, label, extra = '') {
+    return `<td class="done-cell" data-label="${label}"><input type="checkbox" class="plan-done" data-key="${escapeText(key)}" data-need="${needed}"${extra}${isDone(key, needed) ? ' checked' : ''} aria-label="${label}"></td>`;
+}
+
+function seedTotals(cost, wheat) {
+    return [
+        cost > 0 ? `${formatRate(cost)} Pièces de Foyer` : '',
+        wheat > 0 ? `${formatRate(wheat)} ${SEASON.currency}` : '',
+    ].filter(Boolean).join(' + ');
+}
+
+// Compteurs au-dessus du plan et « reste à acheter » sous les graines, recalculés depuis les cases.
+function refreshDoneSummaries() {
+    const planBoxes = [...document.querySelectorAll('#facility-plan-container .plan-done')];
+    const summary = document.getElementById('plan-done-summary');
+    if (summary) {
+        const done = planBoxes.filter(b => b.checked).length;
+        summary.hidden = planBoxes.length === 0;
+        summary.innerHTML = `<span>${done === planBoxes.length && done > 0 ? '✓ Tout est en place' : `Mis en place : ${done} / ${planBoxes.length}`}</span>${done > 0 ? '<button type="button" class="toggle-button small" id="plan-done-reset">Tout décocher</button>' : ''}`;
+    }
+    const seedBoxes = [...document.querySelectorAll('#seed-table .plan-done')];
+    const remaining = document.getElementById('seed-remaining');
+    if (remaining) {
+        const left = seedBoxes.filter(b => !b.checked);
+        const text = seedTotals(left.reduce((sum, b) => sum + Number(b.dataset.cost || 0), 0), left.reduce((sum, b) => sum + Number(b.dataset.wheat || 0), 0));
+        remaining.hidden = seedBoxes.every(b => !b.checked);
+        remaining.querySelector('td:last-child').textContent = text || 'rien';
+    }
+}
+
+document.addEventListener('change', (e) => {
+    const all = e.target.closest?.('.plan-done-all');
+    if (all) {
+        all.closest('table').querySelectorAll('.plan-done').forEach(box => {
+            if (box.checked !== all.checked) { box.checked = all.checked; box.dispatchEvent(new Event('change', { bubbles: true })); }
+        });
+        return;
+    }
+    const box = e.target.closest?.('.plan-done');
+    if (!box) return;
+    if (box.checked) doneChecks[box.dataset.key] = Number(box.dataset.need);
+    else delete doneChecks[box.dataset.key];
+    saveDoneChecks();
+    box.closest('tr')?.classList.toggle('row-done', box.checked);
+    refreshDoneSummaries();
+});
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest?.('#plan-done-reset')) return;
+    document.querySelectorAll('#facility-plan-container .plan-done').forEach(box => { delete doneChecks[box.dataset.key]; });
+    saveDoneChecks();
+    renderFacilityPlan(lastPlan);
+});
+
 // The seeds a plan plants: one seed per planting of each Farmland and Woodland crop, and what
 // they cost. A level-up plan counts them until the level-up is ready; others per the rate
 // card's unit. Mines, Wells and resident facilities aren't planted.
@@ -2499,10 +2567,8 @@ function renderSeedTable(plan) {
     const amount = formatRate;
     const totalCost = rows.reduce((sum, r) => sum + r.cost, 0);
     const totalWheat = rows.reduce((sum, r) => sum + r.wheat, 0);
-    const totals = [
-        totalCost > 0 ? `${amount(totalCost)} Pièces de Foyer` : '',
-        totalWheat > 0 ? `${amount(totalWheat)} ${SEASON.currency}` : '',
-    ].filter(Boolean).join(' + ');
+    const totals = seedTotals(totalCost, totalWheat);
+    const scope = levelUp ? `rv${planContext.target}` : unit;
     card.style.display = 'block';
     const per = levelUp
         ? `jusqu'au RV ${planContext.target}`
@@ -2510,15 +2576,17 @@ function renderSeedTable(plan) {
     document.getElementById('seed-card-unit').textContent = `Graines ${per} : une par plantation, pour chaque culture du plan (${facilityLabel('Farmland')} et ${facilityLabel('Woodland')}).`;
     el.innerHTML = `
         <table>
-            <thead><tr><th>Culture</th><th>Parcelles</th><th>Graines</th><th>Coût</th></tr></thead>
-            <tbody>${rows.map(r => `<tr>
+            <thead><tr><th class="done-col"><input type="checkbox" class="plan-done-all" aria-label="Tout cocher" title="Tout cocher"></th><th>Culture</th><th>Parcelles</th><th>Graines</th><th>Coût</th></tr></thead>
+            <tbody>${rows.map(r => `<tr class="${isDone(`seed|${scope}|${r.facility}|${r.name}`, r.seeds) ? 'row-done' : ''}">
+                ${doneCell(`seed|${scope}|${r.facility}|${r.name}`, r.seeds, 'Acheté', ` data-cost="${r.cost}" data-wheat="${r.wheat}"`)}
                 <td>${prettyItem(r.name)}</td>
                 <td>${r.plots}</td>
                 <td>${amount(r.seeds)}</td>
                 <td>${r.wheat > 0 ? `${amount(r.wheat)} ${SEASON.currency}` : r.cost > 0 ? `${amount(r.cost)} Pièces de Foyer` : 'gratuit'}</td>
             </tr>`).join('')}</tbody>
-            ${rows.length > 1 && totals ? `<tfoot><tr><td colspan="3">Total</td><td>${totals}</td></tr></tfoot>` : ''}
+            ${rows.length > 1 && totals ? `<tfoot><tr><td colspan="4">Total</td><td>${totals}</td></tr><tr id="seed-remaining" hidden><td colspan="4">Reste à acheter</td><td></td></tr></tfoot>` : ''}
         </table>`;
+    refreshDoneSummaries();
 }
 
 // What each product sold earns in a level-up plan, per hour and by the time the level-up is
@@ -2783,6 +2851,7 @@ const ABILITIES = [
     { name: 'Perfumery', color: '#b877d9', about: 'Parfums et encens' },
 ];
 const ABILITY_BY_NAME = new Map(ABILITIES.map(a => [a.name, a]));
+initAniimoDirectory(ABILITIES);
 
 // The ability each environment building's Aniimo needs (confirmed in game).
 const ENVIRONMENT_BUILDING_ABILITY = {
@@ -2836,21 +2905,22 @@ function taskLabel(task, facility, tagged = false) {
     return `${ability} niv. ${task.level} · ${personalityLabel(personality)}${letter ? ` (${letter})` : ''}`;
 }
 
-function facilityPlanTable(rows) {
-    return facilityPlanTableOf([{ rows }]);
+function facilityPlanTable(rows, scope) {
+    return facilityPlanTableOf([{ rows }], scope);
 }
 
 // One table over several labelled groups, e.g. a paired environment's three zones: each group's
 // rows follow a band naming it, so the column headers are written once.
-function facilityPlanTableOf(groups) {
+function facilityPlanTableOf(groups, scope = '') {
     const body = groups
-        .map(group => (group.label ? `<tr class="facility-plan-group"><td colspan="5">${group.label}</td></tr>` : '') + planRows(group.rows))
+        .map(group => (group.label ? `<tr class="facility-plan-group"><td colspan="6">${group.label}</td></tr>` : '') + planRows(group.rows, `${scope}${group.scope || ''}`))
         .join('');
     return `
         <div class="table-wrapper">
             <table class="facility-plan-table">
                 <thead>
                     <tr>
+                        <th class="done-col"><input type="checkbox" class="plan-done-all" aria-label="Tout cocher" title="Tout cocher"></th>
                         <th>Bâtiment</th>
                         <th>Nombre</th>
                         <th>Production</th>
@@ -2864,16 +2934,21 @@ function facilityPlanTableOf(groups) {
     `;
 }
 
-function planRows(rows) {
-    return rows.map(step => `
-                    <tr class="status-${step.status}">
+function planRows(rows, scope) {
+    return rows.map(step => {
+        const key = `${scope}|${step.facility}|${step.item_name || '-'}`;
+        const done = step.item_name && isDone(key, step.facility_count);
+        return `
+                    <tr class="status-${step.status}${done ? ' row-done' : ''}">
+                        ${step.item_name ? doneCell(key, step.facility_count, 'Mis en place') : '<td class="done-cell"></td>'}
                         <td data-label="Bâtiment">${facilityLabel(step.facility)}</td>
                         <td data-label="Nombre">${step.facility_count}</td>
                         <td data-label="Production">${step.item_name ? itemLabel(step.item_name) : '-'}${unverifiedRowKeys.has(`${step.facility}|${step.item_name}`) ? '<span class="tag unverified" title="Pas encore vérifié en jeu">non vérifié</span>' : ''}${step.item_name && step.status === 'producing' ? `<button type="button" class="skip-row" data-skip="${step.item_name}" title="Impossible à produire ? Ignorez-le et recalculez le plan" aria-label="Ignorer ${itemLabel(step.item_name)} et recalculer le plan">✕</button>` : ''}</td>
                         <td data-label="Aniimo">${aniimoLabel(step)}</td>
                         <td data-label="Pourquoi">${wasmText(step.reason)}</td>
                     </tr>
-                `).join('');
+                `;
+    }).join('');
 }
 
 // "Sowing", "Sowing and Collecting", "Reaping, Logging and Collecting".
@@ -3488,7 +3563,7 @@ function renderFacilityPlan(plan) {
                 <h4 class="facility-category-title">${facilityLabel(unit.building)} ${modeTag(modes[0])}<span class="env-head-sep">|</span>${facilityLabel(unit.partner[0])} ${modeTag(modes[1])}${middle ? `<span class="env-head-sep">|</span>Chevauchement ${modeTag(middle)}` : ''}</h4>
                 <div class="env-unit">
                     ${renderEnvironmentDiagram(zones.flatMap(z => z.layout), zones[0].mode, unit.building, zones.flatMap(z => z.rows), unit, zones)}
-                    <div class="env-unit-table">${facilityPlanTableOf(zones.map(z => ({ label: modeTag(z.mode), rows: z.rows })))}</div>
+                    <div class="env-unit-table">${facilityPlanTableOf(zones.map(z => ({ label: modeTag(z.mode), rows: z.rows, scope: `:${z.mode}` })), `pair:${unit.building}|${unit.partner[0]}|${unit.partner[1]},${unit.partner[2]}`)}</div>
                 </div>
             </div>
         `;
@@ -3509,7 +3584,7 @@ function renderFacilityPlan(plan) {
             return orphans.length === 0 ? '' : `
                 <div class="facility-category">
                     <h4 class="facility-category-title">${modeTag(mode)}</h4>
-                    ${facilityPlanTable(orphans)}
+                    ${facilityPlanTable(orphans, `orphan:${mode}`)}
                 </div>`;
         }
         return `
@@ -3519,7 +3594,7 @@ function renderFacilityPlan(plan) {
                     ${units.length > 1 ? `<p class="hint small">${facilityLabel(unit.building)} ${i + 1}</p>` : ''}
                     <div class="env-unit">
                         ${renderEnvironmentDiagram(unit.layout, mode, unit.building, unit.rows, unit)}
-                        <div class="env-unit-table">${facilityPlanTable(unit.rows)}</div>
+                        <div class="env-unit-table">${facilityPlanTable(unit.rows, `${unit.building}#${i + 1}:${mode}`)}</div>
                     </div>
                 `).join('')}
             </div>
@@ -3539,12 +3614,20 @@ function renderFacilityPlan(plan) {
         return `
             <div class="facility-category">
                 <h4 class="facility-category-title">${categoryLabel(category)}</h4>
-                ${facilityPlanTable(categorySteps)}
+                ${facilityPlanTable(categorySteps, `cat:${category}`)}
             </div>
         `;
     }).join('');
 
     container.innerHTML = environmentSections + categorySections;
+    let summary = document.getElementById('plan-done-summary');
+    if (!summary) {
+        summary = document.createElement('div');
+        summary.id = 'plan-done-summary';
+        summary.className = 'done-summary';
+        container.parentElement.insertBefore(summary, container);
+    }
+    refreshDoneSummaries();
 }
 
 // Re-renders "Your Rate" from `lastPlan` at whichever unit is currently selected in the
