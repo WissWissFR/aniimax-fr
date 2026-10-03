@@ -2838,76 +2838,6 @@ tr:hover .skip-row,
     }
 }
 
-/* Annuaire des Aniimo (aniimo-dir.js) */
-.aniimo-dir-abilities {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin: 0.75rem 0;
-}
-
-.aniimo-dir-chip {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.05rem;
-    padding: 0.35rem 0.7rem;
-    background: var(--surface);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--ability);
-    border-radius: 8px;
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.aniimo-dir-chip.on {
-    background: var(--ability);
-    border-color: var(--ability);
-    color: #fff;
-}
-
-.aniimo-dir-count {
-    font-size: 0.7rem;
-    font-weight: 400;
-    opacity: 0.8;
-}
-
-.aniimo-dir-level h3,
-.aniimo-dir-level > summary {
-    margin: 1rem 0 0.4rem;
-}
-
-.aniimo-dir-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 0.4rem 1.25rem;
-}
-
-.aniimo-dir-list li {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.25rem 0.5rem;
-    padding: 0.3rem 0;
-    border-bottom: 1px solid var(--border);
-}
-
-.aniimo-dir-name {
-    font-weight: 600;
-}
-
-.aniimo-dir-others {
-    display: inline-flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    margin-left: auto;
-}
-
 /* Cases « mis en place » / « acheté » (plan des bâtiments et graines) */
 .done-col,
 .done-cell {
@@ -2945,7 +2875,245 @@ tr.row-done td[data-label="Production"] {
     font-weight: 600;
 }
 
+/* Annuaire des Aniimo (aniimo-dir.js) */
+.aniimo-dir {
+    display: grid;
+    grid-template-columns: 210px minmax(0, 1fr);
+    gap: 1.25rem;
+    margin-top: 1rem;
+}
+
+.aniimo-dir-side {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    align-self: start;
+    position: sticky;
+    top: 0.5rem;
+}
+
+.aniimo-dir-side h4 {
+    margin: 0.75rem 0 0.25rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.aniimo-dir-side h4:first-child {
+    margin-top: 0;
+}
+
+.aniimo-dir-side-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.5rem;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.aniimo-dir-side-btn:hover {
+    background: var(--surface);
+}
+
+.aniimo-dir-side-btn.on {
+    background: var(--surface);
+    border-color: var(--ability);
+}
+
+.aniimo-dir-dot {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    background: var(--ability);
+    flex: none;
+}
+
+.aniimo-dir-side-name {
+    flex: 1;
+    font-weight: 600;
+}
+
+.aniimo-dir-side-count {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.aniimo-dir-side-max {
+    min-width: 1.2rem;
+    padding: 0 0.3rem;
+    border-radius: 999px;
+    background: var(--border);
+    font-size: 0.7rem;
+    text-align: center;
+}
+
+.aniimo-dir-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
+}
+
+.aniimo-dir-head .ability {
+    font-size: 0.95rem;
+    padding: 0.1rem 0.8rem;
+}
+
+.aniimo-dir-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    align-items: center;
+    margin: 0.75rem 0 0.25rem;
+}
+
+.aniimo-dir-toolbar input {
+    flex: 1 1 220px;
+    padding: 0.45rem 0.7rem;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font: inherit;
+}
+
+.aniimo-dir-toolbar input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.aniimo-dir-levels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.aniimo-dir-pill {
+    padding: 0.25rem 0.7rem;
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.aniimo-dir-pill b {
+    margin-left: 0.25rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.aniimo-dir-pill.on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+}
+
+.aniimo-dir-pill.on b {
+    color: inherit;
+}
+
+.aniimo-dir-level h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.1rem 0 0.5rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.aniimo-dir-level-count {
+    padding: 0 0.5rem;
+    border-radius: 999px;
+    background: var(--border);
+    font-size: 0.75rem;
+    font-weight: 400;
+}
+
+.aniimo-dir-level.level-4 h3 {
+    color: var(--warning);
+}
+
+.aniimo-dir-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 0.5rem;
+}
+
+.aniimo-card {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    padding: 0.45rem 0.6rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+
+.aniimo-dir-level.level-4 .aniimo-card {
+    border-color: var(--warning);
+}
+
+.aniimo-card img {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+}
+
+.aniimo-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+}
+
+.aniimo-dir-name {
+    font-weight: 600;
+}
+
 .aniimo-dir-form {
     font-size: 0.75rem;
     color: var(--text-muted);
+}
+
+.aniimo-dir-others {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+@media (max-width: 700px) {
+    .aniimo-dir {
+        grid-template-columns: 1fr;
+    }
+
+    .aniimo-dir-side {
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .aniimo-dir-side h4 {
+        width: 100%;
+        margin: 0.4rem 0 0;
+    }
+
+    .aniimo-dir-side-btn {
+        padding: 0.25rem 0.6rem;
+        border-color: var(--border);
+    }
 }

@@ -14,7 +14,11 @@ mettre `TRANSLATE_FACILITY_NAMES = false` dans `i18n-fr.js` pour retrouver les n
 - **Cases « mis en place » / « acheté »** dans le plan des bâtiments et le tableau des graines
   (mémorisées dans le navigateur, avec compteur et « reste à acheter »).
 - **Annuaire des Aniimo** (bouton « aniimo ») : qui a quelle capacité Homeland et à quel niveau,
-  données de [wikily.gg](https://wikily.gg/fr/aniimo/aniilog) relevées le 2026-10-03 (`aniimo-data.js`).
+  données de [wikily.gg](https://wikily.gg/fr/aniimo/aniilog) relevées le 2026-10-03 (`aniimo-data.js`),
+  avec une petite vignette par Aniimo (`aniimo-icons/`).
+- **Sauvegarde** : vos saisies et vos cases cochées sont gardées dans le `localStorage` de votre navigateur
+  (rien n'est envoyé nulle part).
+
 
 ## Lancer en local
 
@@ -31,3 +35,6 @@ puis ouvrir <http://localhost:8123/>.
 
 MIT, © aebii pour aniimax (voir `LICENSE`). Cette traduction conserve la même licence.
 Projet de fans, non affilié aux créateurs d'Aniimo.
+
+Les illustrations d'Aniimo (`aniimo-icons/`) restent la propriété de leurs ayants droit (© FunPlus / Pawprint Studio) ;
+elles sont reprises en petit format pour l'annuaire. À retirer sur simple demande.

@@ -3,14 +3,19 @@
 import { ANIIMO, ANIIMO_SOURCE } from './aniimo-data.js';
 import { abilityLabel } from './i18n-fr.js';
 
-const ORDER = ['Fire', 'Water', 'Grass', 'Lightning', 'Ice', 'Earth', 'Wind', 'Dark', 'Light', 'Hauling', 'Artisanship', 'Leisure', 'Perfumery'];
+const JOBS = ['Hauling', 'Artisanship', 'Leisure', 'Perfumery'];
+const ELEMENTS = ['Fire', 'Water', 'Grass', 'Lightning', 'Ice', 'Earth', 'Wind', 'Dark', 'Light'];
 const escapeHtml = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const normalize = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
 let abilityInfo = new Map();
 let selected = 'Earth';
+let levelFilter = 'all';
 let query = '';
 let built = false;
+
+const withAbility = name => ANIIMO.filter(it => it.a[name] != null);
+const maxLevel = name => Math.max(0, ...withAbility(name).map(it => it.a[name]));
 
 const chip = (name, level) => {
     const a = abilityInfo.get(name);
@@ -18,42 +23,66 @@ const chip = (name, level) => {
     return `<span class="ability${a && a.dark ? ' dark' : ''}"${style}>${abilityLabel(name)}${level != null ? ` ${level}` : ''}</span>`;
 };
 
-function entryHtml(it) {
+function cardHtml(it) {
     const others = Object.entries(it.a)
         .filter(([k]) => k !== selected)
         .sort((x, y) => y[1] - x[1])
-        .map(([k, lv]) => chip(k, lv)).join(' ');
+        .map(([k, lv]) => chip(k, lv)).join('');
     const form = it.f ? `<span class="aniimo-dir-form">${escapeHtml(it.f)}</span>` : '';
-    return `<li><span class="aniimo-dir-name">${escapeHtml(it.n)}</span>${form}<span class="aniimo-dir-others">${others}</span></li>`;
+    return `<li class="aniimo-card">
+        <img src="aniimo-icons/${it.i}.webp" alt="" width="44" height="44" loading="lazy" decoding="async">
+        <div class="aniimo-card-body">
+            <span class="aniimo-dir-name">${escapeHtml(it.n)}</span>${form}
+            <span class="aniimo-dir-others">${others}</span>
+        </div>
+    </li>`;
+}
+
+function renderSide() {
+    const button = name => {
+        const a = abilityInfo.get(name);
+        return `<button type="button" class="aniimo-dir-side-btn${name === selected ? ' on' : ''}" data-ability="${name}" style="--ability:${a ? a.color : '#888'}">
+            <span class="aniimo-dir-dot"></span><span class="aniimo-dir-side-name">${abilityLabel(name)}</span>
+            <span class="aniimo-dir-side-count">${withAbility(name).length}</span>
+            <span class="aniimo-dir-side-max" title="Niveau maximum">${maxLevel(name)}</span>
+        </button>`;
+    };
+    document.getElementById('aniimo-dir-side').innerHTML =
+        `<h4>Métiers</h4>${JOBS.map(button).join('')}<h4>Éléments</h4>${ELEMENTS.map(button).join('')}`;
+}
+
+function renderHead(list) {
+    const a = abilityInfo.get(selected);
+    const top = maxLevel(selected);
+    document.getElementById('aniimo-dir-head').innerHTML = `
+        <div>${chip(selected)} <span class="hint small">${a ? escapeHtml(a.about) : ''}</span></div>
+        <div class="hint small">${withAbility(selected).length} Aniimo · niveau maximum ${top}</div>`;
+    const counts = [4, 3, 2, 1].map(l => [l, withAbility(selected).filter(it => it.a[selected] === l).length]);
+    document.getElementById('aniimo-dir-levels').innerHTML = [['all', `Tous <b>${withAbility(selected).length}</b>`]]
+        .concat(counts.filter(([, n]) => n > 0).map(([l, n]) => [String(l), `Niveau ${l} <b>${n}</b>`]))
+        .map(([v, label]) => `<button type="button" class="aniimo-dir-pill${String(levelFilter) === v ? ' on' : ''}" data-level="${v}">${label}</button>`).join('');
 }
 
 function render() {
+    renderSide();
     const body = document.getElementById('aniimo-dir-results');
     const q = normalize(query.trim());
-    const matches = ANIIMO.filter(it => it.a[selected] != null && (!q || normalize(it.n + ' ' + it.en + ' ' + (it.f || '')).includes(q)));
+    const pool = withAbility(selected);
+    if (levelFilter !== 'all' && !pool.some(it => String(it.a[selected]) === String(levelFilter))) levelFilter = 'all';
+    renderHead(pool);
+    const matches = pool.filter(it => (levelFilter === 'all' || String(it.a[selected]) === String(levelFilter))
+        && (!q || normalize(`${it.n} ${it.en} ${it.f || ''}`).includes(q)));
     if (!matches.length) {
         body.innerHTML = '<p class="hint">Aucun Aniimo ne correspond.</p>';
         return;
     }
-    const html = [4, 3, 2, 1].map(level => {
+    body.innerHTML = [4, 3, 2, 1].map(level => {
         const list = matches.filter(it => it.a[selected] === level);
         if (!list.length) return '';
-        const title = `<h3>Niveau ${level} <span class="hint small">${list.length} Aniimo</span></h3>`;
-        const items = `<ul class="aniimo-dir-list">${list.map(entryHtml).join('')}</ul>`;
-        return level >= 3
-            ? `<section class="aniimo-dir-level">${title}${items}</section>`
-            : `<details class="explain aniimo-dir-level"${q ? ' open' : ''}><summary>Niveau ${level} <span class="hint small">${list.length} Aniimo</span></summary>${items}</details>`;
-    }).join('');
-    body.innerHTML = html;
-}
-
-function renderChips() {
-    document.getElementById('aniimo-dir-abilities').innerHTML = ORDER.map(name => {
-        const a = abilityInfo.get(name);
-        const count = ANIIMO.filter(it => it.a[name] != null).length;
-        const top = Math.max(0, ...ANIIMO.map(it => it.a[name] || 0));
-        const color = a ? a.color : '#888';
-        return `<button type="button" class="aniimo-dir-chip${name === selected ? ' on' : ''}" data-ability="${name}" style="--ability:${color}" title="${abilityInfo.get(name)?.about || ''}">${abilityLabel(name)}<span class="aniimo-dir-count">${count} · max ${top}</span></button>`;
+        return `<section class="aniimo-dir-level level-${level}">
+            <h3>Niveau ${level}<span class="aniimo-dir-level-count">${list.length}</span></h3>
+            <ul class="aniimo-dir-list">${list.map(cardHtml).join('')}</ul>
+        </section>`;
     }).join('');
 }
 
@@ -68,30 +97,43 @@ function build() {
                 <button class="close-button" type="button" aria-label="Fermer">&times;</button>
             </div>
             <div class="modal-body">
-                <p class="hint">Quel Aniimo travaille au Homeland, avec quelle capacité et à quel niveau. Choisissez une capacité pour voir qui l'a, du meilleur niveau au plus faible. Le niveau 4 n'existe que sur quelques formes rares (surtout les formes Prismana).</p>
+                <p class="hint">Quels Aniimo travaillent au Homeland, avec quelle capacité et à quel niveau. Choisissez une capacité à gauche : les meilleurs niveaux s'affichent en premier. Le niveau 4 n'existe que sur quelques formes rares (surtout les formes Prismana).</p>
                 <details class="explain">
                     <summary>Comment obtenir une forme Prismana ?</summary>
                     <p>D'après wikily.gg (noms exacts à vérifier en jeu) : les Aniimo Prismana n'apparaissent que pendant un « flux » Prismana dans une région, possible une fois le niveau 6 de la Branche atteint ; l'énergie prismatique de la région monte avec les vagues sauvages et chaque palier augmente la chance de déclencher un flux (palier 6 : garanti). Une Pierre Prismana transmet à 100 % la forme Prismana d'un parent à l'élevage, et l'Œuf de prière peut faire éclore un Aniimo Prismana mis en avant.</p>
                 </details>
-                <div class="aniimo-dir-abilities" id="aniimo-dir-abilities"></div>
-                <div class="skip-add">
-                    <input type="text" id="aniimo-dir-search" placeholder="Chercher un Aniimo (nom français ou anglais)" autocomplete="off" aria-label="Chercher un Aniimo">
+                <div class="aniimo-dir">
+                    <nav class="aniimo-dir-side" id="aniimo-dir-side" aria-label="Capacités"></nav>
+                    <div class="aniimo-dir-main">
+                        <div class="aniimo-dir-head" id="aniimo-dir-head"></div>
+                        <div class="aniimo-dir-toolbar">
+                            <input type="text" id="aniimo-dir-search" placeholder="Chercher un Aniimo (nom français ou anglais)" autocomplete="off" aria-label="Chercher un Aniimo">
+                            <div class="aniimo-dir-levels" id="aniimo-dir-levels"></div>
+                        </div>
+                        <div id="aniimo-dir-results"></div>
+                    </div>
                 </div>
-                <div id="aniimo-dir-results"></div>
-                <p class="hint small">Données : <a href="${ANIIMO_SOURCE.url}" target="_blank" rel="noopener">${ANIIMO_SOURCE.name}</a>, relevées le ${ANIIMO_SOURCE.date}. Les noms français des Aniimo viennent de cette même source ; un Aniimo avec plusieurs formes identiques n'est listé qu'une fois.</p>
+                <p class="hint small">Capacités et noms français : <a href="${ANIIMO_SOURCE.url}" target="_blank" rel="noopener">${ANIIMO_SOURCE.name}</a>, relevés le ${ANIIMO_SOURCE.date}. Un Aniimo dont plusieurs formes ont les mêmes capacités n'est listé qu'une fois. Illustrations © FunPlus / Pawprint Studio.</p>
             </div>
         </div>`;
     document.body.appendChild(modal);
     modal.addEventListener('click', e => { if (e.target === modal) window.closeAniimo(); });
     modal.querySelector('.close-button').addEventListener('click', () => window.closeAniimo());
-    document.getElementById('aniimo-dir-abilities').addEventListener('click', e => {
+    modal.querySelector('#aniimo-dir-side').addEventListener('click', e => {
         const btn = e.target.closest('[data-ability]');
         if (!btn) return;
         selected = btn.dataset.ability;
-        renderChips();
+        levelFilter = 'all';
+        render();
+        document.getElementById('aniimo-dir-results').scrollIntoView({ block: 'nearest' });
+    });
+    modal.querySelector('#aniimo-dir-levels').addEventListener('click', e => {
+        const btn = e.target.closest('[data-level]');
+        if (!btn) return;
+        levelFilter = btn.dataset.level;
         render();
     });
-    document.getElementById('aniimo-dir-search').addEventListener('input', e => { query = e.target.value; render(); });
+    modal.querySelector('#aniimo-dir-search').addEventListener('input', e => { query = e.target.value; render(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') window.closeAniimo(); });
     built = true;
 }
@@ -100,7 +142,6 @@ export function initAniimoDirectory(abilities) {
     abilityInfo = new Map(abilities.map(a => [a.name, a]));
     window.showAniimo = function() {
         if (!built) build();
-        renderChips();
         render();
         document.getElementById('aniimoModal').classList.add('show');
     };
